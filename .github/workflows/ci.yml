@@ -18,13 +18,18 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 'latest'
           cache: 'pnpm'
+
+      - name : Enable Corepack (provide pnpm)
+        run: | 
+          corepack enable
+          corepack prepare pnpm@latest --activate
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: latest
 
       - name: Cache pnpm store
         uses: actions/cache@v4
