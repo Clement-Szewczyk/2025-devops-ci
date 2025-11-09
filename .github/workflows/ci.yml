@@ -18,18 +18,27 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
+          node-version: '20'
           cache: 'pnpm'
 
-      - name : Enable Corepack (provide pnpm)
-        run: | 
+      - name: Enable Corepack (provide pnpm)
+        run: |
           corepack enable
-          corepack prepare pnpm@latest --activate
+          corepack prepare pnpm@8 --activate
+        shell: bash
+
+      - name: Ensure pnpm is available (fallback)
+        run: |
+          if ! command -v pnpm >/dev/null 2>&1; then
+            echo "pnpm not found — installing globally as fallback"
+            npm install -g pnpm@8
+          fi
+        shell: bash
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: latest
+          version: '8'
 
       - name: Cache pnpm store
         uses: actions/cache@v4
