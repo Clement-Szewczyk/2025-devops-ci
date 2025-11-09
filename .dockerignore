@@ -1,0 +1,10 @@
+node_modules
+.vscode
+.env
+.env.local
+.git
+dist
+coverage
+drizzle
+.dockerignore
+consigne.md
