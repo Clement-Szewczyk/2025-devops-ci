@@ -31,3 +31,4 @@ docker-compose.yaml
 .dockerignore
 Readme.md
 package.json
+e2e/example.spec.ts
