@@ -125,6 +125,52 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-        
+
       - name: Verify Storybook can build
         run: pnpm build-storybook
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: todo-app:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Check image size
+        run: |
+          IMAGE_SIZE=$(docker image inspect todo-app:ci-${{ github.sha }} --format='{{.Size}}')
+          IMAGE_SIZE_MB=$((IMAGE_SIZE / 1024 / 1024))
+          echo "Docker image size: ${IMAGE_SIZE_MB}MB"
+          
+
+      - name: Test image can run
+        run: |
+          docker run --rm -d --name test-container \
+            -e DATABASE_URL=postgres://test:test@localhost:5432/test \
+            -p 3000:3000 \
+            todo-app:ci-${{ github.sha }}
+          
+          # Wait a few seconds for container to start
+          sleep 5
+          
+          # Check if container is running
+          if docker ps | grep test-container; then
+            echo "Container started"
+            docker stop test-container
+          else
+            echo "Container failed"
+            docker logs test-container
+            exit 1
+          fi
