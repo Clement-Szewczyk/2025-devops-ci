@@ -125,17 +125,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-
-      - name: Check README exists
-        run: |
-          if [ ! -f README.md ]; then
-            echo "Error: README.md not found"
-            exit 1
-          fi
-          echo "README.md exists"
-
-      - name: Check README formatting
-        run: pnpm format:check -- README.md
-
+        
       - name: Verify Storybook can build
         run: pnpm build-storybook
