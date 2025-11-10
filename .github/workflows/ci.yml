@@ -105,3 +105,37 @@ jobs:
 
       - name: Run ESLint
         run: pnpm lint
+
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Check README exists
+        run: |
+          if [ ! -f README.md ]; then
+            echo "Error: README.md not found"
+            exit 1
+          fi
+          echo "README.md exists"
+
+      - name: Check README formatting
+        run: pnpm format:check -- README.md
+
+      - name: Verify Storybook can build
+        run: pnpm build-storybook
