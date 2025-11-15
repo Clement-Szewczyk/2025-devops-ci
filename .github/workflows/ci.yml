@@ -174,3 +174,63 @@ jobs:
             docker logs test-container
             exit 1
           fi
+
+  app-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8'
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Verify dependencies resolve
+        run: |
+          echo "check dependencies..."
+          pnpm list --depth=0
+          
+          
+          if pnpm list 2>&1 | grep -i "error\|missing"; then
+            echo "dependency missing"
+            exit 1
+          else
+            echo "nothing missing"
+          fi
+
+      - name: Build application
+        run: pnpm build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Build artifacts."
+          
+          
+          if [ ! -d ".output" ]; then
+            echo " Build output directory not found"
+            exit 1
+          fi
+          
+  
+          if [ ! -f ".output/server/index.mjs" ]; then
+            echo "Server bundle not found"
+            exit 1
+          fi
+         
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: .output/
+          retention-days: 7
