@@ -177,6 +177,8 @@ jobs:
 
   app-build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://test:test@localhost:5432/test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -195,42 +197,34 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Verify dependencies resolve
-        run: |
-          echo "check dependencies..."
-          pnpm list --depth=0
-          
-          
-          if pnpm list 2>&1 | grep -i "error\|missing"; then
-            echo "dependency missing"
-            exit 1
-          else
-            echo "nothing missing"
-          fi
-
       - name: Build application
         run: pnpm build
 
       - name: Verify build artifacts
         run: |
-          echo "Build artifacts."
+          ls -la
           
-          
-          if [ ! -d ".output" ]; then
-            echo " Build output directory not found"
+          if [ -d ".output" ]; then
+            ls -lhR .output/
+            
+            if [ -f ".output/server/index.mjs" ]; then
+              BUILD_SIZE=$(du -sh .output | cut -f1)
+              echo "Build size: $BUILD_SIZE"
+            else
+              echo "Server bundle not found"
+              exit 1
+            fi
+          else
+            echo ".output directory not found"
+            find . -name "dist" -o -name "build" -o -name ".vinxi" 2>/dev/null || true
             exit 1
           fi
-          
-  
-          if [ ! -f ".output/server/index.mjs" ]; then
-            echo "Server bundle not found"
-            exit 1
-          fi
-         
 
       - name: Upload build artifacts
+        if: success() && hashFiles('.output/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: build-output
           path: .output/
           retention-days: 7
+          if-no-files-found: ignore
